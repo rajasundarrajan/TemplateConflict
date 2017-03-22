@@ -222,6 +222,8 @@ public class TemplateConflictEliminator {
 			
 			readAllTemplatesSetPpriotity(doc, stocks, true);
 			
+			writeBackToXSL(stocks.getParent() + "\\tempfiles//combined_output3.xsl"  , doc);
+			
 			
 
 			Iterator it = uniqueFiles.iterator();
@@ -494,10 +496,27 @@ public class TemplateConflictEliminator {
 							attMatch = tmpMatch1;
 						}
 
-						priorityMap.put((mainSSName + " _") + attMatch, (priorityMap
-								.containsKey((mainSSName + " _") + attMatch) != true ? 
-									(StringUtils.isNotEmpty(ele.getAttribute("priority")) ? Integer.parseInt(ele.getAttribute("priority")) : 1)
-								: priorityMap.get((mainSSName + " _") + attMatch) + 1));
+						priorityMap
+								.put((mainSSName + "_") + attMatch,
+										(priorityMap
+												.containsKey((mainSSName + "_")
+														+ attMatch) != true ? (StringUtils.isNotEmpty(ele
+												.getAttribute("priority")) ? Integer.parseInt(ele
+												.getAttribute("priority"))
+												: 1)
+
+												: (!forMainSSCheck ? (priorityMap
+														.get((mainSSName + "_")
+																+ attMatch) + 1)
+														: ((StringUtils.isNotEmpty(ele
+																.getAttribute("priority")) && (Integer.parseInt(ele
+																.getAttribute("priority")) > priorityMap
+																.get((mainSSName + "_")
+																		+ attMatch))) ? Integer.parseInt(ele
+																.getAttribute("priority"))
+																: (priorityMap
+																		.get((mainSSName + "_")
+																				+ attMatch) + 1)))));
 
 						// priorityMap.put(tmpMatch1,
 						// (priorityMap.containsKey(tmpMatch1) != true ? 1 :
@@ -505,11 +524,11 @@ public class TemplateConflictEliminator {
 
 						pipelinedTmps.add(attMatch);
 
-						if (priorityMap.containsKey((mainSSName + " _") + tmpMatch1)
+						if (priorityMap.containsKey((mainSSName + "_") + tmpMatch1)
 								&& !tmpMatch1.equals(s)) {
-							if (priorityMap.containsKey((mainSSName + " _") + s)
-									&& priorityMap.get((mainSSName + " _") + tmpMatch1) < priorityMap
-											.get((mainSSName + " _") + s)) {
+							if (priorityMap.containsKey((mainSSName + "_") + s)
+									&& priorityMap.get((mainSSName + "_") + tmpMatch1) < priorityMap
+											.get((mainSSName + "_") + s)) {
 								tmpMatch1 = s;
 							}
 						} else {
@@ -524,7 +543,7 @@ public class TemplateConflictEliminator {
 					}
 
 					for (String str : pipelinedTmps) {
-						priorityMap.put((mainSSName + " _") + str, priorityMap.get((mainSSName + " _") + tmpMatch1));
+						priorityMap.put((mainSSName + "_") + str, priorityMap.get((mainSSName + "_") + tmpMatch1));
 					}
 				} else {
 					// incase match has only attribute within it
@@ -548,10 +567,34 @@ public class TemplateConflictEliminator {
 						tmpMatch1 = tmpArr[tmpArr.length - 1].trim();
 					}
 
-					priorityMap.put((mainSSName + " _") + tmpMatch1, (priorityMap
-							.containsKey((mainSSName + " _") + tmpMatch1) != true ? 1
-							: priorityMap.get((mainSSName + " _") + tmpMatch1) + 1));
+/*					priorityMap.put((mainSSName + "_") + tmpMatch1, (priorityMap
+							.containsKey((mainSSName + "_") + tmpMatch1) != true ? 1
+							: priorityMap.get((mainSSName + "_") + tmpMatch1) + 1));
+*/
+					
+					priorityMap
+					.put((mainSSName + "_") + tmpMatch1,
+							(priorityMap
+									.containsKey((mainSSName + "_")
+											+ tmpMatch1) != true ? (StringUtils.isNotEmpty(ele
+									.getAttribute("priority")) ? Integer.parseInt(ele
+									.getAttribute("priority"))
+									: 1)
 
+									: (!forMainSSCheck ? (priorityMap
+											.get((mainSSName + "_")
+													+ tmpMatch1) + 1)
+											: ((StringUtils.isNotEmpty(ele
+													.getAttribute("priority")) && (Integer.parseInt(ele
+													.getAttribute("priority")) > priorityMap
+													.get((mainSSName + "_")
+															+ tmpMatch1))) ? Integer.parseInt(ele
+													.getAttribute("priority"))
+													: (priorityMap
+															.get((mainSSName + "_")
+																	+ tmpMatch1) + 1)))));
+
+					
 				}
 				// PriorityDTls holds all the values related to template,
 				// like file, template, priority, once the prority is
@@ -572,9 +615,9 @@ public class TemplateConflictEliminator {
 									.getAttribute("fileName")) ? ele.getAttribute("fileName")
 									: stocks.getName()),
 							tmpMatch,
-							(isTmpMatchPiped ? priorityMap.get((mainSSName + " _") + tmpMatch1) - 1
-									: (priorityMap.containsKey((mainSSName + " _") + tmpMatch1) != true ? 0
-											: priorityMap.get((mainSSName + " _") + tmpMatch1) - 1)), ele.getAttribute("mainstylesheet"));
+							(isTmpMatchPiped ? priorityMap.get((mainSSName + "_") + tmpMatch1) - 1
+									: (priorityMap.containsKey((mainSSName + "_") + tmpMatch1) != true ? 0
+											: priorityMap.get((mainSSName + "_") + tmpMatch1) - 1)), ele.getAttribute("mainstylesheet"));
 				} catch (Exception e) {
 					System.out.println("Error");
 				}
@@ -585,20 +628,43 @@ public class TemplateConflictEliminator {
 				tblVal.add(dtls);
 
 				// set the priority to the doc element
-				ele.setAttribute(
+/*				ele.setAttribute(
 						"priority",
 						""
 								+ ((StringUtils.isNotEmpty(ele
 										.getAttribute("priority")) ? Integer
 										.parseInt(ele.getAttribute("priority"))
 										: 0) + (isTmpMatchPiped ? priorityMap
-										.get((mainSSName + " _") + tmpMatch1) - 1
+										.get((mainSSName + "_") + tmpMatch1) - 1
 										: (priorityMap
-												.containsKey((mainSSName + " _")
+												.containsKey((mainSSName + "_")
 														+ tmpMatch1) != true ? 0
 												: priorityMap
-														.get((mainSSName + " _")
+														.get((mainSSName + "_")
 																+ tmpMatch1) - 1))));
+*/				
+				ele.setAttribute(
+						"priority", "" + 
+						(priorityMap
+								.containsKey((mainSSName + "_")
+										+ tmpMatch1) != true ? (StringUtils.isNotEmpty(ele
+								.getAttribute("priority")) ? Integer.parseInt(ele
+								.getAttribute("priority"))
+								: 1)
+
+								: (!forMainSSCheck ? (priorityMap
+										.get((mainSSName + "_")
+												+ tmpMatch1) + 1)
+										: ((StringUtils.isNotEmpty(ele
+												.getAttribute("priority")) && (Integer.parseInt(ele
+												.getAttribute("priority")) >= priorityMap
+												.get((mainSSName + "_")
+														+ tmpMatch1))) ? Integer.parseInt(ele
+												.getAttribute("priority"))
+												: (priorityMap
+														.get((mainSSName + "_")
+																+ tmpMatch1))))));
+
 				// update the priority to the dictionary, so that next value
 				// will be used for next repeation of template
 				/*
