@@ -84,15 +84,50 @@ public class TemplateConflictEliminator {
 		// false, false);
 
 		String[] files = new String[] {
-				"C:\\RAJA\\AnuTool\\Template conflict\\anu\\email.xsl",
-				"C:\\RAJA\\AnuTool\\Template conflict\\anu\\print.xsl" };
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Apple.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Ball.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Cat.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Dog.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Egg.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Fish.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Gun.xsl",
+				"C:\\raja\\AnuTool\\Template conflict\\anu\\Hen.xsl"
 
-		callMain(files, false, false);
+				
+
+//				"C:\\raja\\AnuTool\\Template conflict\\anu\\print.xsl",
+//				"C:\\raja\\AnuTool\\Template conflict\\anu\\email.xsl"
+				
+				};
+		File inputDirectory = new File("C:\\raja\\AnuTool\\Template conflict\\anu\\");
+		
+		if(inputDirectory.isFile()){
+			callMain(new File[]{inputDirectory}, false, false);
+
+		}else{
+			callMain(inputDirectory.listFiles(), false, false);
+		}
+	}
+	public static String eliminateTempalateConflicts(File inputDirectory, boolean includeXSLInfoOnly){
+		
+		try{
+		
+		if(inputDirectory.isFile()){
+			return callMain(new File[]{inputDirectory}, includeXSLInfoOnly, false);
+
+		}else{
+			return callMain(inputDirectory.listFiles(), includeXSLInfoOnly, false);
+		}
+		}catch(Exception e){
+			System.out.println("Invalid FilePath given");
+			return "Invalid FilePath given";
+		}
+
 	}
 
 	public static String callMain(String file, boolean includeXSLInfoOnly) {
 
-		return callMain(new String[] { file }, includeXSLInfoOnly, false);
+		return callMain(new File[] { new File(file) }, includeXSLInfoOnly, false);
 	}
 
 	/**
@@ -105,7 +140,7 @@ public class TemplateConflictEliminator {
 	 *            true indicates this call is to get included SS information
 	 *            only
 	 */
-	public static String callMain(String[] files, boolean includeXSLInfoOnly,
+	public static String callMain(File[] files, boolean includeXSLInfoOnly,
 			boolean processOutpuXSLfile) {
 
 		try {
@@ -116,7 +151,7 @@ public class TemplateConflictEliminator {
 			 * methods to extract the XML elements by name (it can be specific
 			 * or all *)
 			 */
-			File stocks = new File(files[0]);
+			File stocks = files[0];
 
 			isincludeXSLInfoOnly = includeXSLInfoOnly;
 
@@ -129,7 +164,7 @@ public class TemplateConflictEliminator {
 
 			Document[] docs = new Document[files.length];
 
-			File fileNew = new File(new File(files[0]).getParent()
+			File fileNew = new File(files[0].getParent()
 					+ "\\tempfiles\\" + "combined_output.xsl");
 
 			if (!fileNew.exists()) {
@@ -145,13 +180,15 @@ public class TemplateConflictEliminator {
 
 			int cnt = 0;
 
-			while (cnt < files.length) {
+			while (cnt < files.length ) {
 
-				stocks = new File(files[cnt]);
+				if(files[cnt].getAbsolutePath().toLowerCase().endsWith(".xsl")){
+				stocks = files[cnt];
 
 				docs[cnt] = dBuilder.parse(stocks);
 				
-				String[] tokens = files[cnt].split("[\\\\|/]");
+				String[] tokens = files[cnt].getName().split("[\\\\|/]");
+				
 				String filename = tokens[tokens.length - 1];
 				
 				NodeList nlist = docs[cnt].getElementsByTagName("xsl:template");
@@ -167,11 +204,10 @@ public class TemplateConflictEliminator {
 
 				String response = processStylesheets(nodes, stocks, docs[cnt]);
 
-
-				
 				addNodesNew(doc.getFirstChild(),
 						docs[cnt].getElementsByTagName("xsl:template"),
 						filename , "mainstylesheet");
+				}
 				cnt++;
 			}
 
@@ -201,23 +237,47 @@ public class TemplateConflictEliminator {
 			// We need to set the priority to the templates where the match is
 			// repeated from second time onwards
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles//combined_raw_input.xsl"  , doc);
+			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_raw_input.xsl"  , doc);
 			
 			readAllTemplatesSetPpriotity(doc, stocks, false);
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles//combined_input.xsl"  , doc);
+			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_input.xsl"  , doc);
+			
+			int iter = 1;
 			
 			reassignpriotiy(doc);
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles//combined_output2.xsl"  , doc);
-			
+			writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output2_0.csv" );
+
+//			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output2_0.xsl", doc);
+
 			tblVal.clear();
-			
+
 			readAllTemplatesSetPpriotity(doc, stocks, true);
+
+//			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output3_0.xsl", doc);
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles//combined_output3.xsl"  , doc);
+			writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output3_0.csv" );
 			
-			
+			while (!isTemplatesConflictsEliminated(doc) || 
+					!isIncludedSSTemplatePriorityAligned(doc)) {
+
+				reassignpriotiy(doc);
+
+//				writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output2_" + iter + ".xsl", doc);
+				
+				writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output2_" + iter + ".csv" );
+
+				tblVal.clear();
+
+				readAllTemplatesSetPpriotity(doc, stocks, true);
+
+//				writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output3_" + iter + ".xsl", doc);
+				
+				writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output3_" + iter + ".csv" );
+								
+				iter++;
+			}
 
 			Iterator it = uniqueFiles.iterator();
 			// this following code iterates all the files one by one, reads the
@@ -384,11 +444,29 @@ public class TemplateConflictEliminator {
 		
 		Map<String, Integer> templatePriority = new HashMap<String, Integer>();
 		
+		Set<String> templates = new HashSet<String>();
+		
 		for(int cnt = 0 ; cnt < nlist.getLength(); cnt++){
 			
-			String tempName = ((Element)nlist.item(cnt)).getAttribute("mainstylesheet") + "_" + ((Element)nlist.item(cnt)).getAttribute("match");
+			Element ele = ((Element)nlist.item(cnt));
 			
-			int priority = Integer.parseInt(((Element)nlist.item(cnt)).getAttribute("priority"));
+			String tempName = ele.getAttribute("fileName") + "_" + ele.getAttribute("match");
+			
+			if(tempName.toLowerCase().equals("zoo.xsl_k/a")){
+				System.out.println("You are here" + ((String) ele.getAttribute("mainstylesheet") + "_" + ele.getAttribute("fileName") + "_" + ele.getAttribute("match")));
+			}
+			
+			int priority = Integer.parseInt(ele.getAttribute("priority"));
+			
+			if(templates.contains((String) ele.getAttribute("mainstylesheet") + "_" + ele.getAttribute("fileName") + "_" + ele.getAttribute("match"))){
+//				doc.removeChild(nlist.item(cnt));
+				
+				nlist.item(cnt).getParentNode().removeChild(nlist.item(cnt));
+			}
+			
+//			else{
+				templates.add((String) ele.getAttribute("mainstylesheet") + "_" + ele.getAttribute("fileName") + "_" + ele.getAttribute("match"));
+//			}
 			
 			if(templatePriority.containsKey(tempName)){
 				
@@ -400,13 +478,27 @@ public class TemplateConflictEliminator {
 			}
 		}
 		
-		for(int cnt = 0 ; cnt < nlist.getLength(); cnt++){
+		NodeList nlistnew = doc.getElementsByTagName("xsl:template");
+		
+		for(int cnt = 0 ; cnt < nlistnew.getLength(); cnt++){
 			
-//			String tempName = ((Element)nlist.item(cnt)).getAttribute("match");
+			Element ele = ((Element)nlistnew.item(cnt));
 			
-			String tempName = ((Element)nlist.item(cnt)).getAttribute("mainstylesheet") + "_" + ((Element)nlist.item(cnt)).getAttribute("match");
+			if(true){//!ele.getAttribute("fileName").equals(ele.getAttribute("mainstylesheet"))){
+				
+			String tempName = ele.getAttribute("fileName") + "_" + ele.getAttribute("match");
 			
-			((Element)nlist.item(cnt)).setAttribute("priority", templatePriority.get(tempName).toString());
+			if(ele.getAttribute("match").trim().equals("/*")){
+				System.out.println("you are at /*^****" + ele.getAttribute("fileName") + "***" + templatePriority.get(tempName).toString());
+			}
+			
+			try{
+				ele.setAttribute("priority", templatePriority.get(tempName).toString());
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+			
+			}
 		}
 	}
 
@@ -659,6 +751,94 @@ public class TemplateConflictEliminator {
 		}
 
 	}
+
+	
+	private static boolean isIncludedSSTemplatePriorityAligned(Document doc){
+		
+		NodeList nodesList = doc.getElementsByTagName("xsl:template");
+		
+		HashMap<String, Integer> priorityMap = new HashMap<String, Integer>();
+
+		for(int cnt = 0; cnt < nodesList.getLength(); cnt++){
+			
+			String tmpMatch = ((Element)nodesList.item(cnt)).getAttribute("match");
+			
+			String fileName = ((Element)nodesList.item(cnt)).getAttribute("fileName");
+			
+			String mode = ((Element)nodesList.item(cnt)).getAttribute("mode");
+			
+			Integer currPri = Integer.parseInt(((Element)nodesList.item(cnt)).getAttribute("priority"));
+			
+//			for(String tmpMat : tmpMatch.trim().split("|")){
+				
+			String	tmpMat = tmpMatch.trim();
+				
+				if(priorityMap.containsKey(tmpMat + "^" + fileName)){
+					
+					if(priorityMap.get(tmpMat + "^" + fileName) != currPri){
+						return false;
+					}
+				}else{
+					priorityMap.put(tmpMat + "^" + fileName, currPri);
+				}
+				
+//			}
+
+		}
+		return true;
+		
+	}
+	
+	private static boolean isTemplatesConflictsEliminated(Document doc){
+		
+		NodeList nodesList = doc.getElementsByTagName("xsl:template");
+		
+		HashMap<String, Integer> priorityMap = new HashMap<String, Integer>();
+		
+		for(int cnt = 0; cnt < nodesList.getLength(); cnt++){
+			
+			String tmpMatch = ((Element)nodesList.item(cnt)).getAttribute("match");
+			
+			String mainSS = ((Element)nodesList.item(cnt)).getAttribute("mainstylesheet");
+			
+			String mode = ((Element)nodesList.item(cnt)).getAttribute("mode");
+			
+			Integer currPri = Integer.parseInt(((Element)nodesList.item(cnt)).getAttribute("priority"));
+			
+//			if(tmpMatch.contains("|")){
+//				
+//			}
+			
+			String[] splitBySlash = tmpMatch.split("[\\\\|/]");
+			
+			tmpMatch = splitBySlash[splitBySlash.length - 1];
+			
+			for(String tmpMat : tmpMatch.trim().split("|")){
+				
+				tmpMat = tmpMat.trim();
+				
+				tmpMat = tmpMat.indexOf("[") >= 0
+						&& tmpMat.indexOf("[") < tmpMat.indexOf("]") ? tmpMat
+						.substring(0, tmpMat.indexOf("[")) : tmpMat
+						+ (StringUtils.isEmpty(mode) ? "" : "#"
+								+ mode);
+				if(priorityMap.containsKey(tmpMat + "^" + mainSS)){
+					
+					if(priorityMap.get(tmpMat + "^" + mainSS) > currPri){
+						return false;
+					}else{
+						priorityMap.put(tmpMat + "^" + mainSS, currPri);
+					}
+				}else{
+					priorityMap.put(tmpMat + "^" + mainSS, currPri);
+				}
+				
+			}
+			
+		}
+		
+		return true;
+	}
 	
 	/**
 	 * this utility function helps us to write the XML document object into the
@@ -685,6 +865,38 @@ public class TemplateConflictEliminator {
 		}
 	}
 
+	private static void writePartialResultinCSV(Document doc, String fileName){
+		
+		NodeList lists = doc.getElementsByTagName("xsl:template");
+		StringBuffer resultData = new StringBuffer();
+		for(int cnt =0; cnt < lists.getLength(); cnt++){
+			Element ele = (Element) lists.item(cnt);
+			resultData.append(ele.getAttribute("mainstylesheet") + "," 
+							+ ele.getAttribute("fileName") + "," 
+								+ ele.getAttribute("match") + (ele.hasAttribute("mode") ? ele.getAttribute("mode") : "" ) +"," 
+									+ ele.getAttribute("priority") + "\n");
+		}
+		
+		
+		
+		try {
+			
+			File f1 = new File(fileName);
+			
+			FileWriter fw = new FileWriter(f1);
+			
+			fw.write(resultData.toString());
+			
+			fw.flush();
+			
+			fw.close();
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+	}
 	/**
 	 * this processStylesheets function processes all the inlcude nodes [nodes]
 	 * and add all the templates from included SS under this xsl:include node
@@ -846,6 +1058,16 @@ public class TemplateConflictEliminator {
 				((Element) node1).setAttribute(attrName, file);
 				
 				((Element) node1).removeAttribute("priority");
+
+				node.appendChild(node1);
+				
+			}else if(node1.getNodeName().toLowerCase().equals("xsl:include")) {
+				
+				try{
+					node.getOwnerDocument().adoptNode(node1);
+				}catch(Exception e){
+					System.out.println(e.getMessage());
+				}
 
 				node.appendChild(node1);
 			}
