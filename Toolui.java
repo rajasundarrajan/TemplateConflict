@@ -1,5 +1,6 @@
 package com.Tool.Templateconflict;
 
+import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -14,18 +15,24 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
+
+import toolui.ToolUInew;
+
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.border.BevelBorder;
-import javax.swing.border.Border;
-import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
+import javax.swing.JScrollBar;
 
 public class Toolui extends JFrame {
 
 	private JPanel contentPane;
-	private JTextArea textField;
+	JTextArea textField = new JTextArea();
+
 
 	/**
 	 * Launch the application.
@@ -34,7 +41,7 @@ public class Toolui extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Toolui frame = new Toolui();
+					ToolUInew frame = new ToolUInew();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -56,23 +63,6 @@ public class Toolui extends JFrame {
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
 		JFileChooser fileChooser = new JFileChooser();
-		textField = new JTextArea();
-		
-		
-		
-		
-	    JPanel middlePanel = new JPanel ();
-	    middlePanel.setBorder ( (Border) new TitledBorder ( new EtchedBorder (), "Display Area" ) );
-
-	    // create the middle panel components
-
-	    textField.setEditable ( false ); // set textArea non-editable
-	    JScrollPane scroll = new JScrollPane ( textField );
-	    scroll.setVerticalScrollBarPolicy ( ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS );
-
-	    //Add Textarea in to middle panel
-	    middlePanel.add ( scroll );
-
 	    
 
 		JButton btnFromGitButton = new JButton("From Git Folder");
@@ -191,12 +181,15 @@ public class Toolui extends JFrame {
 
 		contentPane.add(btnEliminateConflicts);
 		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(391, 215, 107, -143);
+		contentPane.add(scrollPane);
+		
+		JScrollPane scrollPane_1 = new JScrollPane();
+		scrollPane_1.setBounds(313, 63, 305, 248);
+		contentPane.add(scrollPane_1);
+		
+		scrollPane_1.setViewportView(textField);
 
-		textField.setBounds(300, 63, 381, 250);
-		contentPane.add(textField);
-		
-		middlePanel.setVisible(true);
-		
-		textField.setColumns(10);
 	}
 }
