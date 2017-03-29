@@ -80,7 +80,7 @@ public class TemplateConflictEliminator {
 	}
 
 	public static void main(String[] args) {
-		// callMain("C:/raja/AnuTool/Template conflict/tempfiles/print-email-output1.xsl",
+		// callMain("C:/raja/AnuTool/Template conflict/logfiles/print-email-output1.xsl",
 		// false, false);
 
 		String[] files = new String[] {
@@ -163,9 +163,15 @@ public class TemplateConflictEliminator {
 			DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
 
 			Document[] docs = new Document[files.length];
-
+			
+			File logFolder = new File(files[0].getParent()
+					+ "\\logfiles");
+			
+			if(!logFolder.exists() || !logFolder.isDirectory()){
+				logFolder.mkdir();
+			}
 			File fileNew = new File(files[0].getParent()
-					+ "\\tempfiles\\" + "combined_output.xsl");
+					+ "\\logfiles\\" + "combined_output.xsl");
 
 			if (!fileNew.exists()) {
 				fileNew.createNewFile();
@@ -237,44 +243,44 @@ public class TemplateConflictEliminator {
 			// We need to set the priority to the templates where the match is
 			// repeated from second time onwards
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_raw_input.xsl"  , doc);
+			writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_raw_input.xsl"  , doc);
 			
 			readAllTemplatesSetPpriotity(doc, stocks, false);
 			
-			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_input.xsl"  , doc);
+			writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_input.xsl"  , doc);
 			
 			int iter = 1;
 			
 			reassignpriotiy(doc);
 			
-			writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output2_0.csv" );
+			writePartialResultinCSV(doc, stocks.getParent() + "\\logfiles\\combined_output2_0.csv" );
 
-//			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output2_0.xsl", doc);
+//			writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_output2_0.xsl", doc);
 
 			tblVal.clear();
 
 			readAllTemplatesSetPpriotity(doc, stocks, true);
 
-//			writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output3_0.xsl", doc);
+//			writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_output3_0.xsl", doc);
 			
-			writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output3_0.csv" );
+			writePartialResultinCSV(doc, stocks.getParent() + "\\logfiles\\combined_output3_0.csv" );
 			
 			while (!isTemplatesConflictsEliminated(doc) || 
 					!isIncludedSSTemplatePriorityAligned(doc)) {
 
 				reassignpriotiy(doc);
 
-//				writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output2_" + iter + ".xsl", doc);
+//				writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_output2_" + iter + ".xsl", doc);
 				
-				writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output2_" + iter + ".csv" );
+				writePartialResultinCSV(doc, stocks.getParent() + "\\logfiles\\combined_output2_" + iter + ".csv" );
 
 				tblVal.clear();
 
 				readAllTemplatesSetPpriotity(doc, stocks, true);
 
-//				writeBackToXSL(stocks.getParent() + "\\tempfiles\\combined_output3_" + iter + ".xsl", doc);
+//				writeBackToXSL(stocks.getParent() + "\\logfiles\\combined_output3_" + iter + ".xsl", doc);
 				
-				writePartialResultinCSV(doc, stocks.getParent() + "\\tempfiles\\combined_output3_" + iter + ".csv" );
+				writePartialResultinCSV(doc, stocks.getParent() + "\\logfiles\\combined_output3_" + iter + ".csv" );
 								
 				iter++;
 			}
@@ -284,7 +290,30 @@ public class TemplateConflictEliminator {
 			// template details of each file and reads the priority of each
 			// template
 			// in the file then set the priority to the Document object
+			
+			NodeList nlist = doc.getElementsByTagName("xsl:template");
+			
+			tblVal.clear();
+			
+			Element ele;
+			
+			PriorityDtls dtls;
+			
+			for(cnt = 0; cnt < nlist.getLength(); cnt++){
+				ele = (Element) nlist.item(cnt);
+				
+				String modeVal = getValue("mode", ele);
 
+				String tmpName1 = getValue("match", ele)
+						+ (StringUtils.isEmpty(modeVal) ? "" : "#"
+								+ modeVal);
+				dtls = new PriorityDtls(ele.getAttribute("fileName"), tmpName1,
+							Integer.parseInt(ele.getAttribute("priority")), ele.getAttribute("mainstylesheet"));
+				
+				tblVal.add(dtls);
+				
+			}
+			
 			// tblVal is the list of all the templates created from output.xsl
 			if (!processOutpuXSLfile) {
 				while (it.hasNext()) {
@@ -355,7 +384,7 @@ public class TemplateConflictEliminator {
 				}
 			}
 
-			File theDir = new File(stocks.getParent() + "\\tempfiles\\");
+			File theDir = new File(stocks.getParent() + "\\logfiles\\");
 
 			// if the directory does not exist, create it
 			if (!theDir.exists()) {
@@ -366,8 +395,8 @@ public class TemplateConflictEliminator {
 				} catch (SecurityException se) {
 				}
 			}
-			String fileName = stocks.getParent() + "\\tempfiles\\"
-					+ "output.xsl";
+			String fileName = stocks.getParent() + "\\logfiles\\"
+					+ "final_output.xsl";
 
 			// write the XML document having all the tempates replaced for every
 			// xsl:include in the main SS to the output.xsl file.
@@ -398,7 +427,7 @@ public class TemplateConflictEliminator {
 			// Desktop.getDesktop().open(f);
 			// }
 			System.out.println(includeXSLInfo);
-			File theDir = new File(f.getAbsolutePath() + "\\tempfiles\\");
+			File theDir = new File(f.getAbsolutePath() + "\\logfiles\\");
 
 			// if the directory does not exist, create it
 			if (!theDir.exists()) {
@@ -409,10 +438,10 @@ public class TemplateConflictEliminator {
 				} catch (SecurityException se) {
 				}
 			}
-			// String fileName = f.getAbsolutePath() + "\\tempfiles\\" +
+			// String fileName = f.getAbsolutePath() + "\\logfiles\\" +
 			// "output.xsl";
 
-			File f1 = new File(f.getAbsolutePath() + "\\tempfiles\\"
+			File f1 = new File(f.getAbsolutePath() + "\\logfiles\\"
 					+ "fileLInks.txt");
 			FileWriter fW1 = new FileWriter(f1);
 			fW1.write(includeXSLInfo);
