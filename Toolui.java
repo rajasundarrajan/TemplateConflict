@@ -225,7 +225,7 @@ public class Toolui extends javax.swing.JFrame {
 						btnListOfIncluded.setEnabled(true);
 						btnEliminateConflicts.setEnabled(true);
 						final JComponent[] inputs = new JComponent[] { new JLabel(
-								"Would you like to process all the Stylesheets in the folder of the File you Chose??? Saying No will proess the selected File alone") };
+								"<html>Would you like to process all the Stylesheets in the folder of the File you Chose? <br>Saying No will process the selected File alone</html>") };
 						int result = JOptionPane.showConfirmDialog(null, inputs, "My custom dialog",
 								JOptionPane.OK_OPTION);
 						if (result == JOptionPane.OK_OPTION) {
